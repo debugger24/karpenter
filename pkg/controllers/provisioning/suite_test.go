@@ -16,10 +16,11 @@ package provisioning_test
 
 import (
 	"context"
-	"knative.dev/pkg/ptr"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"testing"
 	"time"
+
+	"knative.dev/pkg/ptr"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/aws/karpenter/pkg/controllers/state"
 	v1 "k8s.io/api/core/v1"
@@ -760,6 +761,34 @@ var _ = Describe("Multiple Provisioners", func() {
 			for _, pod := range pods {
 				node := ExpectScheduled(ctx, env.Client, pod)
 				Expect(node.Labels[v1alpha5.ProvisionerNameLabelKey]).To(Equal(provisioners[2].GetName()))
+			}
+		})
+		It("should schedule to the provisioner with the highest priority always irrespective of cost", func() {
+			provisioners := []client.Object{
+				test.Provisioner(test.ProvisionerOptions{Weight: ptr.Int32(100), Requirements: []v1.NodeSelectorRequirement{
+					{
+						Key:      v1.LabelInstanceTypeStable,
+						Operator: v1.NodeSelectorOpIn,
+						Values:   []string{"m3.large"},
+					},
+				}}),
+				test.Provisioner(test.ProvisionerOptions{Weight: ptr.Int32(50), Requirements: []v1.NodeSelectorRequirement{
+					{
+						Key:      v1.LabelInstanceTypeStable,
+						Operator: v1.NodeSelectorOpIn,
+						Values:   []string{"m3.medium", "m3.large"},
+					},
+				}}),
+			}
+			ExpectApplied(ctx, env.Client, provisioners...)
+			pods := ExpectProvisioned(ctx, env.Client, controller, test.UnschedulablePod(
+				test.PodOptions{
+					ResourceRequirements: v1.ResourceRequirements{Requests: v1.ResourceList{v1.ResourceCPU: resource.MustParse("1"), v1.ResourceMemory: resource.MustParse("1Gi")}},
+				},
+			))
+			for _, pod := range pods {
+				node := ExpectScheduled(ctx, env.Client, pod)
+				Expect(node.Labels[v1alpha5.ProvisionerNameLabelKey]).To(Equal(provisioners[0].GetName()))
 			}
 		})
 		It("should schedule to explicitly selected provisioner even if other provisioners are higher priority", func() {
