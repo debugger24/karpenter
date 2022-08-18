@@ -103,6 +103,20 @@ func (c *CloudProvider) GetInstanceTypes(_ context.Context, provisioner *v1alpha
 			},
 		}),
 		NewInstanceType(InstanceTypeOptions{
+			Name: "medium-instance-type",
+			Resources: map[v1.ResourceName]resource.Quantity{
+				v1.ResourceCPU:    resource.MustParse("4"),
+				v1.ResourceMemory: resource.MustParse("4Gi"),
+			},
+		}),
+		NewInstanceType(InstanceTypeOptions{
+			Name: "large-instance-type",
+			Resources: map[v1.ResourceName]resource.Quantity{
+				v1.ResourceCPU:    resource.MustParse("8"),
+				v1.ResourceMemory: resource.MustParse("8Gi"),
+			},
+		}),
+		NewInstanceType(InstanceTypeOptions{
 			Name: "nvidia-gpu-instance-type",
 			Resources: map[v1.ResourceName]resource.Quantity{
 				v1alpha1.ResourceNVIDIAGPU: resource.MustParse("2"),

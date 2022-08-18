@@ -769,14 +769,14 @@ var _ = Describe("Multiple Provisioners", func() {
 					{
 						Key:      v1.LabelInstanceTypeStable,
 						Operator: v1.NodeSelectorOpIn,
-						Values:   []string{"m3.large"},
+						Values:   []string{"large-instance-type"},
 					},
 				}}),
 				test.Provisioner(test.ProvisionerOptions{Weight: ptr.Int32(50), Requirements: []v1.NodeSelectorRequirement{
 					{
 						Key:      v1.LabelInstanceTypeStable,
 						Operator: v1.NodeSelectorOpIn,
-						Values:   []string{"m3.medium", "m3.large"},
+						Values:   []string{"medium-instance-type", "large-instance-type"},
 					},
 				}}),
 			}
